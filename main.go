@@ -1,15 +1,16 @@
 package main
 
 import (
+	"booking-app/helper"
 	"fmt"
-	"strings"
+	"strconv"
 )
 
 const conferenceTickets = 50
 
 var conferenceName = "Go Conference"
 var remainingTickets = 50
-var bookings = []string{}
+var bookings = make([]map[string]string, 0)
 
 func main() {
 
@@ -19,16 +20,16 @@ func main() {
 
 		firstName, lastName, emailAddress, userTickets := getUserInput()
 
-		isValidName, isValidEmail, isValidTicketNumber := validateUserInput(firstName, lastName, emailAddress, userTickets, remainingTickets)
+		isValidName, isValidEmail, isValidTicketNumber := helper.ValidateUserInput(firstName, lastName, emailAddress, userTickets, remainingTickets)
 
 		if isValidName && isValidEmail && isValidTicketNumber {
 
 			//book Tickets
-			remainingTickets, bookings := bookTickets(remainingTickets, userTickets, bookings, firstName, lastName, emailAddress, conferenceName)
+			bookTickets(remainingTickets, userTickets, firstName, lastName, emailAddress)
 
 			//Print First Names
 
-			firstNames := getFirstNames(bookings)
+			firstNames := getFirstNames()
 
 			fmt.Printf("All bookings first name are: %v\n", firstNames)
 
@@ -59,23 +60,14 @@ func greetUsers() {
 	fmt.Println("Get your tickets here")
 }
 
-func getFirstNames(bookings []string) []string {
+func getFirstNames() []string {
 	firstNames := []string{}
 
 	for _, booking := range bookings {
-		names := strings.Fields(booking)
-		firstNames = append(firstNames, names[0])
+		firstNames = append(firstNames, booking["firstName"])
 	}
 
 	return firstNames
-}
-
-func validateUserInput(firstName string, lastName string, emailAddress string, userTickets int, remainingTickets int) (bool, bool, bool) {
-	isValidName := len(firstName) > 2 && len(lastName) > 2
-	isValidEmail := strings.Contains(emailAddress, "@")
-	isValidTicketNumber := userTickets > 0 && userTickets <= remainingTickets
-
-	return isValidName, isValidEmail, isValidTicketNumber
 }
 
 func getUserInput() (string, string, string, int) {
@@ -98,14 +90,21 @@ func getUserInput() (string, string, string, int) {
 	return firstName, lastName, emailAddress, userTickets
 }
 
-func bookTickets(remainingTickets int, userTickets int, bookings []string, firstName string, lastName string, emailAddress string, conferenceName string) (int, []string) {
+func bookTickets(remainingTickets int, userTickets int, firstName string, lastName string, emailAddress string) {
 	remainingTickets = remainingTickets - userTickets
 
-	bookings = append(bookings, firstName+" "+lastName)
+	//Create a booking map
+
+	userData := make(map[string]string)
+
+	userData["firstName"] = firstName
+	userData["lastName"] = lastName
+	userData["emailAddress"] = emailAddress
+	userData["numberOfTickets"] = strconv.Itoa(userTickets)
+
+	bookings = append(bookings, userData)
 
 	fmt.Printf("Thank you %v %v for booking %v tickets. You will receive a confirmation email at %v\n", firstName, lastName, userTickets, emailAddress)
 	fmt.Printf("%v tickets remaining for %v\n", remainingTickets, conferenceName)
 	fmt.Printf("These are all our bookings: %v\n", bookings)
-
-	return remainingTickets, bookings
 }
